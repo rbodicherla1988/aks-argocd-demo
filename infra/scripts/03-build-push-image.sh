@@ -10,12 +10,15 @@ if [[ ! -f "$STATE_FILE" ]]; then
 fi
 
 IMAGE_REF="${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}"
-echo "==> Building and pushing $IMAGE_REF via az acr build"
-az acr build \
-  --registry "$ACR_NAME" \
-  --image "${IMAGE_NAME}:${IMAGE_TAG}" \
-  --file "$DEMO_ROOT/app/Dockerfile" \
-  "$DEMO_ROOT/app"
+echo "==> Building and pushing $IMAGE_REF"
+if az acr build --registry "$ACR_NAME" --image "${IMAGE_NAME}:${IMAGE_TAG}" --file "$DEMO_ROOT/app/Dockerfile" "$DEMO_ROOT/app"; then
+  echo "Built via az acr build"
+else
+  echo "ACR Tasks unavailable; falling back to local docker (linux/amd64)"
+  az acr login --name "$ACR_NAME"
+  docker build --platform linux/amd64 -t "$IMAGE_REF" -f "$DEMO_ROOT/app/Dockerfile" "$DEMO_ROOT/app"
+  docker push "$IMAGE_REF"
+fi
 
 DEPLOY_YAML="$DEMO_ROOT/gitops/sample-web/deployment.yaml"
 echo "==> Patching image in $DEPLOY_YAML -> $IMAGE_REF"
