@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-web
+  namespace: sample-web
+  labels:
+    app.kubernetes.io/name: sample-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sample-web
+    spec:
+      containers:
+        - name: sample-web
+          # Replace ACR_NAME before first sync, or re-run 03-build-push-image.sh
+          # which patches this value. Placeholder works once ACR_NAME is substituted.
+          image: ACR_NAME.azurecr.io/sample-web:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: APP_MESSAGE
+              value: "Hello from AKS via ArgoCD"
+            - name: PORT
+              value: "8080"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

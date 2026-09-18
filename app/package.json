@@ -1,0 +1,16 @@
+{
+  "name": "sample-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal Express app for AKS + ArgoCD demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

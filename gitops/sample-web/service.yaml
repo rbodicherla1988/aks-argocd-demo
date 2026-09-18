@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-web
+  namespace: sample-web
+  labels:
+    app.kubernetes.io/name: sample-web
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: sample-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

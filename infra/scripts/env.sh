@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Shared defaults for aks-argocd-demo scripts. Override any var before running.
+# Explicit exports win over persisted state. Example:
+#   RG=my-rg LOCATION=centralindia ./01-create-rg-acr-aks.sh
+
+STATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.state"
+mkdir -p "$STATE_DIR"
+STATE_FILE="$STATE_DIR/env.local"
+
+# Capture caller overrides before loading state
+_OVERRIDE_RG="${RG-}"
+_OVERRIDE_LOCATION="${LOCATION-}"
+_OVERRIDE_AKS_NAME="${AKS_NAME-}"
+_OVERRIDE_ACR_NAME="${ACR_NAME-}"
+_OVERRIDE_NODE_COUNT="${NODE_COUNT-}"
+_OVERRIDE_NODE_VM_SIZE="${NODE_VM_SIZE-}"
+_OVERRIDE_IMAGE_NAME="${IMAGE_NAME-}"
+_OVERRIDE_IMAGE_TAG="${IMAGE_TAG-}"
+_OVERRIDE_GIT_REPO_URL="${GIT_REPO_URL-}"
+_OVERRIDE_GIT_TARGET_REVISION="${GIT_TARGET_REVISION-}"
+_OVERRIDE_GITOPS_PATH="${GITOPS_PATH-}"
+
+if [[ -f "$STATE_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$STATE_FILE"
+fi
+
+# Restore caller overrides
+[[ -n "${_OVERRIDE_RG}" ]] && RG="$_OVERRIDE_RG"
+[[ -n "${_OVERRIDE_LOCATION}" ]] && LOCATION="$_OVERRIDE_LOCATION"
+[[ -n "${_OVERRIDE_AKS_NAME}" ]] && AKS_NAME="$_OVERRIDE_AKS_NAME"
+[[ -n "${_OVERRIDE_ACR_NAME}" ]] && ACR_NAME="$_OVERRIDE_ACR_NAME"
+[[ -n "${_OVERRIDE_NODE_COUNT}" ]] && NODE_COUNT="$_OVERRIDE_NODE_COUNT"
+[[ -n "${_OVERRIDE_NODE_VM_SIZE}" ]] && NODE_VM_SIZE="$_OVERRIDE_NODE_VM_SIZE"
+[[ -n "${_OVERRIDE_IMAGE_NAME}" ]] && IMAGE_NAME="$_OVERRIDE_IMAGE_NAME"
+[[ -n "${_OVERRIDE_IMAGE_TAG}" ]] && IMAGE_TAG="$_OVERRIDE_IMAGE_TAG"
+[[ -n "${_OVERRIDE_GIT_REPO_URL}" ]] && GIT_REPO_URL="$_OVERRIDE_GIT_REPO_URL"
+[[ -n "${_OVERRIDE_GIT_TARGET_REVISION}" ]] && GIT_TARGET_REVISION="$_OVERRIDE_GIT_TARGET_REVISION"
+[[ -n "${_OVERRIDE_GITOPS_PATH}" ]] && GITOPS_PATH="$_OVERRIDE_GITOPS_PATH"
+
+: "${RG:=aks-argocd-demo-rg}"
+: "${LOCATION:=eastus}"
+: "${AKS_NAME:=aks-argocd-demo}"
+: "${ACR_NAME:=}"
+: "${NODE_COUNT:=2}"
+: "${NODE_VM_SIZE:=Standard_B2s}"
+: "${NODE_VM_SIZE_FALLBACK:=Standard_D2s_v3}"
+: "${IMAGE_NAME:=sample-web}"
+: "${IMAGE_TAG:=v1}"
+: "${ARGOCD_NAMESPACE:=argocd}"
+: "${ARGOCD_RELEASE:=argocd}"
+: "${GIT_REPO_URL:=}"
+: "${GIT_TARGET_REVISION:=HEAD}"
+: "${GITOPS_PATH:=gitops/sample-web}"
+: "${GIT_USERNAME:=}"
+: "${GIT_PASSWORD:=}"
+
+save_state() {
+  cat > "$STATE_FILE" <<STATE
+RG=${RG}
+LOCATION=${LOCATION}
+AKS_NAME=${AKS_NAME}
+ACR_NAME=${ACR_NAME}
+NODE_COUNT=${NODE_COUNT}
+NODE_VM_SIZE=${NODE_VM_SIZE}
+IMAGE_NAME=${IMAGE_NAME}
+IMAGE_TAG=${IMAGE_TAG}
+GIT_REPO_URL=${GIT_REPO_URL}
+GIT_TARGET_REVISION=${GIT_TARGET_REVISION}
+GITOPS_PATH=${GITOPS_PATH}
+STATE
+}
+
+export RG LOCATION AKS_NAME ACR_NAME NODE_COUNT NODE_VM_SIZE NODE_VM_SIZE_FALLBACK
+export IMAGE_NAME IMAGE_TAG ARGOCD_NAMESPACE ARGOCD_RELEASE
+export GIT_REPO_URL GIT_TARGET_REVISION GITOPS_PATH GIT_USERNAME GIT_PASSWORD
+export STATE_DIR STATE_FILE
+
+DEMO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export DEMO_ROOT

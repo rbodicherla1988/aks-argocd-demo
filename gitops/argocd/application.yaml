@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-web
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # Set via GIT_REPO_URL when applying (04-register-argocd-app.sh)
+    repoURL: GIT_REPO_URL
+    targetRevision: HEAD
+    path: gitops/sample-web
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-web
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
