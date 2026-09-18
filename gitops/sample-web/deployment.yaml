@@ -19,7 +19,7 @@ spec:
         - name: sample-web
           # Replace ACR_NAME before first sync, or re-run 03-build-push-image.sh
           # which patches this value. Placeholder works once ACR_NAME is substituted.
-          image: ACR_NAME.azurecr.io/sample-web:v1
+          image: aksdemoadbaff.azurecr.io/sample-web:v1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
