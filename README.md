@@ -13,8 +13,10 @@ Learning demo: provision AKS with Azure CLI, build a sample Node.js web app into
 ```
 aks-argocd-demo/
   app/                      # Express sample web app + Dockerfile
+  agent/                    # Phase-0 Claude read-only monitor
   gitops/sample-web/        # K8s manifests Argo CD syncs
-  gitops/argocd/            # Argo CD Application CR template
+  gitops/llm-monitor/       # CronJob + RBAC + NetworkPolicy (no live secrets)
+  gitops/argocd/            # Argo CD Application CR templates
   infra/scripts/            # Azure CLI / Helm runbook
 ```
 
@@ -105,6 +107,42 @@ Open the Argo CD UI (URL + password from step 02). Application `sample-web` shou
 ```bash
 cd infra/scripts
 ./99-teardown.sh
+```
+
+## Claude llm-monitor (Phase 0)
+
+Read-only CronJob that collects `sample-web` facts, calls Claude, and logs a JSON health report.
+
+**Guardrails:** dedicated ServiceAccount, namespace Role (get/list/watch only), NetworkPolicy, allowlisted health URL, output schema validation, Cron every 6h, kill switch via ConfigMap `AGENT_ENABLED` or CronJob `suspend`.
+
+**Secrets stay out of Git.** Create the API key Secret on the cluster:
+
+```bash
+export ANTHROPIC_API_KEY='...'   # from Anthropic console — never commit
+./infra/scripts/05-create-llm-secret.sh
+```
+
+After AKS/ACR/Argo exist:
+
+```bash
+cd infra/scripts
+./06-build-push-llm-monitor.sh
+# commit + push patched gitops/llm-monitor/cronjob.yaml image line
+GIT_REPO_URL=https://github.com/rbodicherla1988/aks-argocd-demo.git ./07-register-llm-monitor-app.sh
+```
+
+Manual run:
+
+```bash
+kubectl create job -n llm-monitor llm-monitor-manual --from=cronjob/llm-monitor
+kubectl logs -n llm-monitor -l job-name=llm-monitor-manual -f
+```
+
+Suspend without deleting:
+
+```bash
+# In gitops/llm-monitor/cronjob.yaml set suspend: true  OR
+# ConfigMap AGENT_ENABLED: "false"
 ```
 
 ## Notes

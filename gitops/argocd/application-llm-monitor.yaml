@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llm-monitor
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # Set via GIT_REPO_URL when applying (04/06 register scripts)
+    repoURL: GIT_REPO_URL
+    targetRevision: HEAD
+    path: gitops/llm-monitor
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: llm-monitor
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    # Secret llm-monitor-secrets is created out-of-band and must not be pruned
+    # if you later add ignoreDifferences; for Phase 0 create Secret before first sync.

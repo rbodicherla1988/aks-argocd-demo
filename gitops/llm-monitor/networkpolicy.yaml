@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: llm-monitor
+  namespace: llm-monitor
+  labels:
+    app.kubernetes.io/name: llm-monitor
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: llm-monitor
+  policyTypes:
+    - Ingress
+    - Egress
+  # No ingress required for a CronJob worker
+  ingress: []
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Kubernetes API (in-cluster)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: default
+      ports:
+        - protocol: TCP
+          port: 443
+    # sample-web health probe
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: sample-web
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 8080
+    # Anthropic API (Phase 0: HTTPS egress; tighten with egress firewall/FQDN policy later)
+    - ports:
+        - protocol: TCP
+          port: 443

@@ -2,3 +2,14 @@
 **/node_modules/
 infra/scripts/.state/
 *.log
+.env
+**/.env
+**/.venv/
+**/__pycache__/
+*.pyc
+# Never commit live secrets
+**/secret.yaml
+!**/*.example
+gitops/**/secrets/
+*.pem
+*.key

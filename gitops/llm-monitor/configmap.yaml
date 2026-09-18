@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-monitor-config
+  namespace: llm-monitor
+  labels:
+    app.kubernetes.io/name: llm-monitor
+data:
+  # Kill switch: set to "false" and sync via Argo CD to skip Claude calls
+  AGENT_ENABLED: "true"
+  MONITOR_NAMESPACE: "sample-web"
+  HEALTH_URL: "http://sample-web.sample-web.svc/healthz"
+  MAX_TOKENS: "1024"
+  # Override at deploy time if needed; no secrets here
+  ANTHROPIC_MODEL: "claude-sonnet-4-5"
+  ANTHROPIC_API_URL: "https://api.anthropic.com/v1/messages"
